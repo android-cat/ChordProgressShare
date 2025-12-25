@@ -1,7 +1,7 @@
-/**
+﻿/**
  * トップページ
  * 
- * - 検索・閲覧タブ: コード進行の検索と一覧表示
+ * - 検索閲覧タブ: コード進行の検索と一覧表示
  * - 新規投稿タブ: コード進行の投稿フォーム
  */
 
@@ -73,93 +73,101 @@ export default function HomePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold flex items-center justify-center gap-2">
-          <Music className="h-8 w-8" />
-          コード進行共有サイト
-        </h1>
-        <p className="text-muted-foreground">
-          度数（ディグリーネーム）によるコード進行を投稿・共有・検索できるプラットフォーム
-        </p>
-      </div>
+    <div className="space-y-12 pb-12">
+      {/* Hero Section */}
+      <section className="relative py-20 text-center space-y-6 overflow-hidden">
+        <div className="absolute inset-0 -z-10 bg-grid-pattern opacity-20" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background to-background/50" />
+        
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight lg:text-7xl text-primary">
+            Share Your <span className="text-accent">Chord Progressions</span>
+          </h1>
+          <p className="mx-auto max-w-[700px] text-lg text-muted-foreground md:text-xl">
+            度数（ディグリーネーム）でコード進行を共有・検索。
+          </p>
+        </div>
+      </section>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="browse">
-            <Search className="h-4 w-4 mr-2" /> 検索・閲覧
-          </TabsTrigger>
-          <TabsTrigger value="create">
-            <Plus className="h-4 w-4 mr-2" /> 新規投稿
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-5xl mx-auto">
+        <div className="flex justify-center mb-8">
+          <TabsList className="grid w-full max-w-md grid-cols-2 p-1 bg-muted/50 backdrop-blur">
+            <TabsTrigger value="browse" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <Search className="h-4 w-4 mr-2" /> 検索・閲覧
+            </TabsTrigger>
+            <TabsTrigger value="create" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <Plus className="h-4 w-4 mr-2" /> 新規投稿
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value="browse" className="space-y-6">
+        <TabsContent value="browse" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
           {/* 検索フォーム */}
-          <Card>
+          <Card className="border-none shadow-lg bg-card/50 backdrop-blur">
             <CardHeader>
-              <CardTitle>検索</CardTitle>
+              <CardTitle>検索条件</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSearch} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      名称・備考で検索
-                    </label>
-                    <Input
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="例: 王道進行"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      コード進行で検索
-                    </label>
-                    <Input
-                      value={chordQuery}
-                      onChange={(e) => setChordQuery(e.target.value)}
-                      placeholder="例: IV|V|IIIm|VIm"
-                    />
-                  </div>
+              <form onSubmit={handleSearch} className="grid gap-4 md:grid-cols-[1fr,1fr,auto]">
+                <div className="space-y-2">
+                  <Input
+                    placeholder="キーワード検索 (例: J-Pop, 王道)"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-background/50"
+                  />
                 </div>
-                <Button type="submit" className="w-full">
+                <div className="space-y-2">
+                  <Input
+                    placeholder="コード進行検索 (例: IV-V-iii-vi)"
+                    value={chordQuery}
+                    onChange={(e) => setChordQuery(e.target.value)}
+                    className="bg-background/50"
+                  />
+                </div>
+                <Button type="submit" className="w-full md:w-auto bg-primary hover:bg-primary/90">
                   <Search className="h-4 w-4 mr-2" /> 検索
                 </Button>
               </form>
             </CardContent>
           </Card>
 
-          {/* 検索結果 */}
+          {/* 結果一覧 */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">
-              {searchQuery || chordQuery ? '検索結果' : 'コード進行一覧'}
-              <span className="text-muted-foreground text-sm ml-2">
-                ({progressions.length}件)
-              </span>
-            </h2>
-
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold tracking-tight">Latest Progressions</h2>
+              <span className="text-sm text-muted-foreground">{progressions.length} 件の進行が見つかりました</span>
+            </div>
+            
             {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                読み込み中...
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Card key={i} className="h-[200px] animate-pulse bg-muted/50" />
+                ))}
               </div>
-            ) : progressions.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                コード進行が見つかりませんでした
-              </div>
-            ) : (
-              <div className="space-y-4">
+            ) : progressions.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {progressions.map((progression) => (
                   <ProgressionCard key={progression.id} progression={progression} />
                 ))}
+              </div>
+            ) : (
+              <div className="text-center py-20 bg-muted/20 rounded-lg border border-dashed">
+                <p className="text-muted-foreground">条件に一致するコード進行は見つかりませんでした</p>
               </div>
             )}
           </div>
         </TabsContent>
 
-        <TabsContent value="create">
-          <ProgressionForm onSubmit={handleSubmit} isLoading={isSubmitting} />
+        <TabsContent value="create" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <Card className="border-none shadow-lg bg-card/50 backdrop-blur">
+            <CardHeader>
+              <CardTitle>新規コード進行の投稿</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ProgressionForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
