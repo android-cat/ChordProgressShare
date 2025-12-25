@@ -82,26 +82,49 @@ export function ProgressionCard({ progression, showDetail = false, onEdit }: Pro
                 )}
               </Button>
             </div>
-            <div className="grid grid-cols-8 gap-1">
-              {pattern.chords.map((chord, chordIndex) => (
-                <div
-                  key={chordIndex}
-                  className={`
-                    p-2 text-center text-sm border rounded
-                    ${playingPattern === patternIndex && playingIndex === chordIndex 
-                      ? 'bg-primary text-primary-foreground' 
-                      : chord ? 'bg-muted' : 'bg-background'
-                    }
-                  `}
-                >
-                  {chord || '-'}
-                </div>
-              ))}
-            </div>
-            <div className="text-xs text-muted-foreground flex gap-2">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
-                <span key={n} className="flex-1 text-center">{n}小節</span>
-              ))}
+            <div className="flex flex-wrap gap-1 text-sm">
+              {Array.from({ length: 8 }).map((_, measureIndex) => {
+                const firstBeatIndex = measureIndex * 2
+                const secondBeatIndex = measureIndex * 2 + 1
+                const firstBeat = pattern.chords[firstBeatIndex]
+                const secondBeat = pattern.chords[secondBeatIndex]
+                
+                // 両方nullの場合はこの小節をスキップ
+                if (!firstBeat && !secondBeat) return null
+                
+                // 後半が入力されているか確認
+                const hasSecondBeat = secondBeat !== null
+                
+                return (
+                  <div key={measureIndex} className="flex items-center gap-0.5">
+                    <span>|</span>
+                    <span 
+                      className={`px-1 ${
+                        playingPattern === patternIndex && playingIndex === firstBeatIndex 
+                          ? 'bg-primary text-primary-foreground rounded' 
+                          : ''
+                      }`}
+                    >
+                      {firstBeat || '-'}
+                    </span>
+                    {hasSecondBeat && (
+                      <>
+                        <span> </span>
+                        <span 
+                          className={`px-1 ${
+                            playingPattern === patternIndex && playingIndex === secondBeatIndex 
+                              ? 'bg-primary text-primary-foreground rounded' 
+                              : ''
+                          }`}
+                        >
+                          {secondBeat}
+                        </span>
+                      </>
+                    )}
+                    <span>|</span>
+                  </div>
+                )
+              }).filter(Boolean)}
             </div>
           </div>
         ))}

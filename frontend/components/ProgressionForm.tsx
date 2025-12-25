@@ -16,7 +16,9 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useToast } from '@/components/ui/use-toast'
 import { ChordInput } from './ChordInput'
+import { MeasureInput } from './MeasureInput'
 import { Plus, Trash2, Play, Square, Music } from 'lucide-react'
 import { playChords, stopPlayback } from '@/lib/audio'
 import type { Pattern, Song, ProgressionCreate } from '@/lib/api'
@@ -65,6 +67,7 @@ export function ProgressionForm({
   submitLabel = '投稿する',
   isLoading = false 
 }: ProgressionFormProps) {
+  const { toast } = useToast()
   const [title, setTitle] = useState(initialData?.title || '')
   const [remarks, setRemarks] = useState(initialData?.remarks || '')
   const [patterns, setPatterns] = useState<PatternInput[]>(
@@ -73,6 +76,18 @@ export function ProgressionForm({
   const [songs, setSongs] = useState<SongInput[]>(initialData?.songs || [])
   const [playingPattern, setPlayingPattern] = useState<number | null>(null)
   const [playingIndex, setPlayingIndex] = useState<number>(-1)
+  const [bpm, setBpm] = useState<number>(120)
+  const [volume, setVolume] = useState<number>(-6)
+  
+  // 各パターンの各小節について、後半を表示するかどうかの状態
+  // patterns[patternIndex].chords[measureIndex*2+1] がnullでない場合は初期表示
+  const [showSecondBeats, setShowSecondBeats] = useState<boolean[][]>(() => {
+    return patterns.map(pattern => 
+      Array.from({ length: 8 }).map((_, measureIndex) => 
+        pattern.chords[measureIndex * 2 + 1] !== null
+      )
+    )
+  })
 
   const updatePattern = (patternIndex: number, field: keyof PatternInput, value: any) => {
     const newPatterns = [...patterns]
@@ -90,11 +105,25 @@ export function ProgressionForm({
 
   const addPattern = () => {
     setPatterns([...patterns, { ...emptyPattern(), label: `パターン${patterns.length + 1}` }])
+    setShowSecondBeats([...showSecondBeats, Array(8).fill(false)])
   }
 
   const removePattern = (index: number) => {
     if (patterns.length > 1) {
       setPatterns(patterns.filter((_, i) => i !== index))
+      setShowSecondBeats(showSecondBeats.filter((_, i) => i !== index))
+    }
+  }
+  
+  const toggleSecondBeat = (patternIndex: number, measureIndex: number, show: boolean) => {
+    const newShowSecondBeats = [...showSecondBeats]
+    newShowSecondBeats[patternIndex] = [...newShowSecondBeats[patternIndex]]
+    newShowSecondBeats[patternIndex][measureIndex] = show
+    setShowSecondBeats(newShowSecondBeats)
+    
+    if (!show) {
+      // 後半を非表示にする場合はnullに設定
+      updateChord(patternIndex, measureIndex * 2 + 1, null)
     }
   }
 
@@ -120,17 +149,31 @@ export function ProgressionForm({
     } else {
       stopPlayback()
       setPlayingPattern(patternIndex)
-      await playChords(patterns[patternIndex].chords, 120, (index) => {
+      await playChords(patterns[patternIndex].chords, bpm, (index) => {
         setPlayingIndex(index)
         if (index === -1) {
           setPlayingPattern(null)
         }
-      })
+      }, volume)
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // 楽曲タイトルがない場合にURLが入力されているかチェック
+    for (let i = 0; i < songs.length; i++) {
+      const song = songs[i]
+      const hasUrl = song.youtube_url || song.spotify_url || song.apple_music_url
+      if (hasUrl && !song.name) {
+        toast({
+          title: 'バリデーションエラー',
+          description: `楽曲 ${i + 1}: URLが入力されている場合は曲名も入力してください`,
+          variant: 'destructive'
+        })
+        return
+      }
+    }
     
     const data: ProgressionCreate = {
       title,
@@ -230,21 +273,59 @@ export function ProgressionForm({
                 </Button>
               )}
             </div>
+            <div className="flex items-center gap-4 mt-4">
+              <div className="flex items-center gap-2 flex-1">
+                <Label htmlFor={`bpm-${patternIndex}`} className="text-sm whitespace-nowrap">BPM: {bpm}</Label>
+                <input
+                  id={`bpm-${patternIndex}`}
+                  type="range"
+                  min="60"
+                  max="200"
+                  value={bpm}
+                  onChange={(e) => setBpm(Number(e.target.value))}
+                  className="flex-1"
+                />
+              </div>
+              <div className="flex items-center gap-2 flex-1">
+                <Label htmlFor={`volume-${patternIndex}`} className="text-sm whitespace-nowrap">音量: {volume}dB</Label>
+                <input
+                  id={`volume-${patternIndex}`}
+                  type="range"
+                  min="-24"
+                  max="0"
+                  value={volume}
+                  onChange={(e) => setVolume(Number(e.target.value))}
+                  className="flex-1"
+                />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
-              {pattern.chords.map((chord, chordIndex) => (
-                <ChordInput
-                  key={chordIndex}
-                  index={chordIndex}
-                  value={chord}
-                  onChange={(value) => updateChord(patternIndex, chordIndex, value)}
-                  isPlaying={playingPattern === patternIndex && playingIndex === chordIndex}
-                />
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 8 }).map((_, measureIndex) => {
+                const firstBeatIndex = measureIndex * 2
+                const secondBeatIndex = measureIndex * 2 + 1
+                const firstBeat = pattern.chords[firstBeatIndex]
+                const secondBeat = pattern.chords[secondBeatIndex]
+                const showSecond = showSecondBeats[patternIndex]?.[measureIndex] ?? false
+                
+                return (
+                  <MeasureInput
+                    key={measureIndex}
+                    measureIndex={measureIndex}
+                    firstBeatValue={firstBeat}
+                    secondBeatValue={showSecond ? secondBeat : undefined}
+                    onFirstBeatChange={(value) => updateChord(patternIndex, firstBeatIndex, value)}
+                    onSecondBeatChange={(value) => updateChord(patternIndex, secondBeatIndex, value)}
+                    onToggleSecondBeat={(show) => toggleSecondBeat(patternIndex, measureIndex, show)}
+                    isFirstBeatPlaying={playingPattern === patternIndex && playingIndex === firstBeatIndex}
+                    isSecondBeatPlaying={playingPattern === patternIndex && playingIndex === secondBeatIndex}
+                  />
+                )
+              })}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              ※ 1小節 = 2枠（前半・後半）、最大8小節まで入力可能
+            <p className="text-xs text-muted-foreground mt-4">
+              ※ デフォルトは1小節1コード。+ボタンで後半を追加できます（最大8小節）
             </p>
           </CardContent>
         </Card>

@@ -12,3 +12,16 @@ declare module 'tone' {
   export const getContext: any
   export const context: any
 }
+
+declare module 'tone/build/esm/index.js' {
+  const tone: any
+  export default tone
+  export const PolySynth: any
+  export const Synth: any
+  export const Transport: any
+  export const Draw: any
+  export const start: any
+  export const now: any
+  export const getContext: any
+  export const context: any
+}

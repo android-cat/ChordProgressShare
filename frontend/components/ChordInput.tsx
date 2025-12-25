@@ -28,6 +28,7 @@ interface ChordInputProps {
   onChange: (value: string | null) => void
   index: number  // 0-15（16枠）
   isPlaying?: boolean  // 再生中ハイライト用
+  showBeatLabel?: boolean  // 前半/後半のラベルを表示するか（後半がある場合のみtrue）
 }
 
 // 度数選択肢（全角ローマ数字 + 修飾子込み）
@@ -124,7 +125,7 @@ function buildChordValue(degree: string, quality: string, bass: string): string 
   return chord
 }
 
-export function ChordInput({ value, onChange, index, isPlaying = false }: ChordInputProps) {
+export function ChordInput({ value, onChange, index, isPlaying = false, showBeatLabel = false }: ChordInputProps) {
   const parsed = parseChordValue(value)
   const [showBass, setShowBass] = useState(!!parsed.bass)
 
@@ -164,16 +165,16 @@ export function ChordInput({ value, onChange, index, isPlaying = false }: ChordI
       
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
-          {isFirstBeat && '||'} {measureNumber}小節 - {isFirstBeat ? '前半' : '後半'} {isLastBeat && '||'}
+          {isFirstBeat && '||'} {measureNumber}小節{showBeatLabel ? ` - ${isFirstBeat ? '前半' : '後半'}` : ''} {isLastBeat && '||'}
         </span>
         <div className="flex gap-1">
           {value && (
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handlePreview}>
+            <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={handlePreview}>
               <Volume2 className="h-3 w-3" />
             </Button>
           )}
           {value && (
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleClear}>
+            <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={handleClear}>
               <X className="h-3 w-3" />
             </Button>
           )}
@@ -222,12 +223,12 @@ export function ChordInput({ value, onChange, index, isPlaying = false }: ChordI
               ))}
             </SelectContent>
           </Select>
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setShowBass(false); handleChange('bass', '') }}>
+          <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setShowBass(false); handleChange('bass', '') }}>
             <X className="h-3 w-3" />
           </Button>
         </div>
       ) : (
-        <Button variant="ghost" size="sm" className="w-full h-6 text-xs" onClick={() => setShowBass(true)}>
+        <Button type="button" variant="ghost" size="sm" className="w-full h-6 text-xs" onClick={() => setShowBass(true)}>
           <Plus className="h-3 w-3 mr-1" /> オンコード
         </Button>
       )}
