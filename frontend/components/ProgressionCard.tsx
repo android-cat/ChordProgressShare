@@ -2,7 +2,7 @@
  * コード進行カード表示コンポーネント
  * 
  * コード進行の表示・再生を行う。
- * - コードパターンの表示（8×2グリッド）
+ * - コードパターンの表示（1小節ごとに||で囲む形式）
  * - Tone.jsによる試聴機能
  * - 使用楽曲の表示とプレビュー埋め込み
  */
@@ -11,10 +11,12 @@
 
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Play, Square, ExternalLink, Music } from 'lucide-react'
 import { playChords, stopPlayback } from '@/lib/audio'
-import type { Progression, Pattern, Song } from '@/lib/api'
+import { formatChordsToMeasures } from '@/lib/chord-display'
+import type { Progression } from '@/lib/api'
 
 interface ProgressionCardProps {
   progression: Progression
@@ -25,6 +27,8 @@ interface ProgressionCardProps {
 export function ProgressionCard({ progression, showDetail = false, onEdit }: ProgressionCardProps) {
   const [playingPattern, setPlayingPattern] = useState<number | null>(null)
   const [playingIndex, setPlayingIndex] = useState<number>(-1)
+  const [bpm, setBpm] = useState<number>(120)
+  const [volume, setVolume] = useState<number>(-6)
 
   const handlePlay = async (patternIndex: number, chords: (string | null)[]) => {
     if (playingPattern === patternIndex) {
@@ -34,12 +38,12 @@ export function ProgressionCard({ progression, showDetail = false, onEdit }: Pro
     } else {
       stopPlayback()
       setPlayingPattern(patternIndex)
-      await playChords(chords, 120, (index) => {
+      await playChords(chords, bpm, (index) => {
         setPlayingIndex(index)
         if (index === -1) {
           setPlayingPattern(null)
         }
-      })
+      }, volume)
     }
   }
 
@@ -66,6 +70,34 @@ export function ProgressionCard({ progression, showDetail = false, onEdit }: Pro
         )}
       </CardHeader>
       <CardContent className="space-y-4">
+        {showDetail && (
+          <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/50">
+            <div className="flex items-center gap-2 flex-1">
+              <Label htmlFor="detail-bpm" className="text-sm whitespace-nowrap">BPM: {bpm}</Label>
+              <input
+                id="detail-bpm"
+                type="range"
+                min="60"
+                max="200"
+                value={bpm}
+                onChange={(e) => setBpm(Number(e.target.value))}
+                className="flex-1"
+              />
+            </div>
+            <div className="flex items-center gap-2 flex-1">
+              <Label htmlFor="detail-volume" className="text-sm whitespace-nowrap">音量: {volume}dB</Label>
+              <input
+                id="detail-volume"
+                type="range"
+                min="-24"
+                max="0"
+                value={volume}
+                onChange={(e) => setVolume(Number(e.target.value))}
+                className="flex-1"
+              />
+            </div>
+          </div>
+        )}
         {progression.patterns.map((pattern, patternIndex) => (
           <div key={pattern.id || patternIndex} className="space-y-2">
             <div className="flex items-center gap-2">
@@ -83,41 +115,32 @@ export function ProgressionCard({ progression, showDetail = false, onEdit }: Pro
               </Button>
             </div>
             <div className="flex flex-wrap gap-1 text-sm">
-              {Array.from({ length: 8 }).map((_, measureIndex) => {
-                const firstBeatIndex = measureIndex * 2
-                const secondBeatIndex = measureIndex * 2 + 1
-                const firstBeat = pattern.chords[firstBeatIndex]
-                const secondBeat = pattern.chords[secondBeatIndex]
-                
-                // 両方nullの場合はこの小節をスキップ
-                if (!firstBeat && !secondBeat) return null
-                
-                // 後半が入力されているか確認
-                const hasSecondBeat = secondBeat !== null
+              {formatChordsToMeasures(pattern.chords).map((measure) => {
+                if (measure.isEmpty) return null
                 
                 return (
-                  <div key={measureIndex} className="flex items-center gap-0.5">
+                  <div key={measure.measureIndex} className="flex items-center gap-0.5">
                     <span>|</span>
                     <span 
                       className={`px-1 ${
-                        playingPattern === patternIndex && playingIndex === firstBeatIndex 
+                        playingPattern === patternIndex && playingIndex === measure.measureIndex * 2
                           ? 'bg-primary text-primary-foreground rounded' 
                           : ''
                       }`}
                     >
-                      {firstBeat || '-'}
+                      {measure.firstBeat || '-'}
                     </span>
-                    {hasSecondBeat && (
+                    {measure.hasSecondBeat && (
                       <>
                         <span> </span>
                         <span 
                           className={`px-1 ${
-                            playingPattern === patternIndex && playingIndex === secondBeatIndex 
+                            playingPattern === patternIndex && playingIndex === measure.measureIndex * 2 + 1
                               ? 'bg-primary text-primary-foreground rounded' 
                               : ''
                           }`}
                         >
-                          {secondBeat}
+                          {measure.secondBeat}
                         </span>
                       </>
                     )}

@@ -26,7 +26,7 @@ from schemas import (
     ProgressionListResponse, AdminAction, BlockIPRequest, 
     BlockedIPResponse, DiffResponse
 )
-from chord_utils import normalize_chords_for_search, get_chord_options
+from chord_utils import normalize_chords_for_search, normalize_chord, normalize_search_query, get_chord_options
 
 # FastAPIアプリケーション初期化
 app = FastAPI(title="Chord Progress Share API", version="1.0.0")
@@ -113,8 +113,10 @@ async def get_progressions(
     
     # コード進行検索
     if chord_query:
+        # 検索クエリを正規化（全角ローマ数字→半角、区切り文字の整理）
+        normalized_query = normalize_search_query(chord_query)
         stmt = stmt.where(
-            Progression.normalized_chords.ilike(f"%{chord_query}%")
+            Progression.normalized_chords.ilike(f"%{normalized_query}%")
         )
     
     stmt = stmt.order_by(Progression.created_at.desc())

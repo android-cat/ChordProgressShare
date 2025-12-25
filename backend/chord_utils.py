@@ -50,6 +50,37 @@ def normalize_chord(chord: Optional[str]) -> str:
     return result
 
 
+def normalize_search_query(query: Optional[str]) -> str:
+    """検索クエリを正規化する
+    
+    全角ローマ数字や音楽記号を半角に変換し、
+    表示用の区切り文字（|など）を検索用の形式に変換。
+    例: |Ⅳ||Ⅴ| → IV|V
+    
+    Args:
+        query: 検索クエリ文字列
+    
+    Returns:
+        正規化された検索クエリ
+    """
+    if not query:
+        return ""
+    
+    # まず文字を正規化
+    normalized = normalize_chord(query)
+    
+    # 連続する|を1つにまとめる
+    normalized = re.sub(r'\|+', '|', normalized)
+    
+    # 前後の|を削除
+    normalized = normalized.strip('|')
+    
+    # スペースやハイフンも|として扱う
+    normalized = re.sub(r'[-\s]+', '|', normalized)
+    
+    return normalized
+
+
 def normalize_chords_for_search(patterns: List[dict]) -> str:
     """複数パターンのコードを検索用に正規化した文字列に変換
     

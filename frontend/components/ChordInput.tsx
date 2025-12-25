@@ -11,7 +11,6 @@
 
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -19,123 +18,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { X, Plus, Play, Volume2 } from 'lucide-react'
+import { X, Plus, Volume2 } from 'lucide-react'
 import { playChordPreview } from '@/lib/audio'
+import { DEGREE_OPTIONS, QUALITY_OPTIONS } from '@/lib/chord-constants'
+import { parseChord, buildChord } from '@/lib/chord-parser'
 
-// コンポーネントのProps定義
 interface ChordInputProps {
   value: string | null
   onChange: (value: string | null) => void
-  index: number  // 0-15（16枠）
-  isPlaying?: boolean  // 再生中ハイライト用
-  showBeatLabel?: boolean  // 前半/後半のラベルを表示するか（後半がある場合のみtrue）
-}
-
-// 度数選択肢（全角ローマ数字 + 修飾子込み）
-const DEGREE_OPTIONS = [
-  { value: 'I', label: 'Ⅰ' },
-  { value: '#I', label: '#Ⅰ' },
-  { value: 'bII', label: '♭Ⅱ' },
-  { value: 'II', label: 'Ⅱ' },
-  { value: '#II', label: '#Ⅱ' },
-  { value: 'bIII', label: '♭Ⅲ' },
-  { value: 'III', label: 'Ⅲ' },
-  { value: 'IV', label: 'Ⅳ' },
-  { value: '#IV', label: '#Ⅳ' },
-  { value: 'bV', label: '♭Ⅴ' },
-  { value: 'V', label: 'Ⅴ' },
-  { value: '#V', label: '#Ⅴ' },
-  { value: 'bVI', label: '♭Ⅵ' },
-  { value: 'VI', label: 'Ⅵ' },
-  { value: '#VI', label: '#Ⅵ' },
-  { value: 'bVII', label: '♭Ⅶ' },
-  { value: 'VII', label: 'Ⅶ' },
-]
-
-// クオリティ選択肢（英語表記）
-const QUALITIES = [
-  { value: 'major', label: 'M (メジャー)', actual: '' },
-  { value: 'm', label: 'm (マイナー)', actual: 'm' },
-  { value: '7', label: '7 (セブンス)', actual: '7' },
-  { value: 'M7', label: 'M7 (メジャーセブンス)', actual: 'maj7' },
-  { value: 'm7', label: 'm7 (マイナーセブンス)', actual: 'm7' },
-  { value: 'dim', label: 'dim (ディミニッシュ)', actual: 'dim' },
-  { value: 'dim7', label: 'dim7', actual: 'dim7' },
-  { value: 'aug', label: 'aug (オーギュメント)', actual: 'aug' },
-  { value: 'sus4', label: 'sus4', actual: 'sus4' },
-  { value: 'sus2', label: 'sus2', actual: 'sus2' },
-  { value: '7sus4', label: '7sus4', actual: '7sus4' },
-  { value: 'add9', label: 'add9', actual: 'add9' },
-  { value: 'm7-5', label: 'm7-5 (ハーフディミニッシュ)', actual: 'm7b5' },
-  { value: '6', label: '6', actual: '6' },
-  { value: 'm6', label: 'm6', actual: 'm6' },
-  { value: '9', label: '9', actual: '9' },
-  { value: 'M9', label: 'M9', actual: 'maj9' },
-  { value: 'm9', label: 'm9', actual: 'm9' },
-]
-
-/**
- * コードをパースして各要素に分解
- */
-function parseChordValue(chord: string | null): { degree: string; quality: string; bass: string } {
-  if (!chord) return { degree: '', quality: '', bass: '' }
-  
-  let bass = ''
-  let mainChord = chord
-  
-  if (chord.includes('/')) {
-    const parts = chord.split('/')
-    mainChord = parts[0]
-    bass = parts[1]
-  }
-  
-  // 度数部分を抽出（#IV, bVII, IIなど）
-  const pattern = /^([b#]?)(I{1,3}|IV|VI{0,2}|VII?)(.*)$/i
-  const match = mainChord.match(pattern)
-  
-  if (!match) return { degree: '', quality: '', bass: '' }
-  
-  // 修飾子は小文字のまま、度数のみ大文字に
-  const modifier = match[1].toLowerCase()
-  const degreeRoman = match[2].toUpperCase()
-  const degreeWithModifier = modifier + degreeRoman
-  const actualQuality = match[3] || ''
-  
-  // 内部形式からUI形式に変換（maj7→M7など）
-  let displayQuality = 'major'
-  const qualityMatch = QUALITIES.find(q => q.actual === actualQuality)
-  if (qualityMatch) {
-    displayQuality = qualityMatch.value
-  }
-  
-  return { degree: degreeWithModifier, quality: displayQuality, bass }
-}
-
-/**
- * コード要素を結合してコード文字列を構築
- */
-function buildChordValue(degree: string, quality: string, bass: string): string | null {
-  if (!degree) return null
-  
-  // UI形式から内部形式に変換（M7→maj7など）
-  const qualityMatch = QUALITIES.find(q => q.value === quality)
-  const actualQuality = qualityMatch ? qualityMatch.actual : quality
-  
-  let chord = `${degree}${actualQuality}`
-  if (bass) {
-    chord += `/${bass}`
-  }
-  return chord
+  index: number
+  isPlaying?: boolean
+  showBeatLabel?: boolean
 }
 
 export function ChordInput({ value, onChange, index, isPlaying = false, showBeatLabel = false }: ChordInputProps) {
-  const parsed = parseChordValue(value)
+  const parsed = parseChord(value)
   const [showBass, setShowBass] = useState(!!parsed.bass)
 
-  const handleChange = (field: string, newValue: string) => {
-    const current = parseChordValue(value)
+  const handleChange = (field: keyof typeof parsed, newValue: string) => {
+    const current = parseChord(value)
     const updated = { ...current, [field]: newValue }
-    onChange(buildChordValue(updated.degree, updated.quality, updated.bass))
+    onChange(buildChord(updated.degree, updated.quality, updated.bass))
   }
 
   const handlePreview = async () => {
@@ -149,37 +52,25 @@ export function ChordInput({ value, onChange, index, isPlaying = false, showBeat
     setShowBass(false)
   }
 
-  // 小節の区切りを表示
   const measureNumber = Math.floor(index / 2) + 1
   const isFirstBeat = index % 2 === 0
-  const isLastBeat = index % 2 === 1
-  const isFirstInMeasure = index % 2 === 0
-  const isLastInMeasure = index % 2 === 1
 
   return (
     <div className={`relative p-2 border rounded-lg space-y-2 ${isPlaying ? 'bg-primary/10 border-primary' : 'bg-card'}`}>
-      {/* 小節区切り線 */}
-      {isFirstBeat && (
-        <div className="absolute -left-1 top-0 bottom-0 w-0.5 bg-border" />
-      )}
-      {isLastBeat && (
-        <div className="absolute -right-1 top-0 bottom-0 w-0.5 bg-border" />
-      )}
-      
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
-          {isFirstBeat && '||'} {measureNumber}小節{showBeatLabel ? ` - ${isFirstBeat ? '前半' : '後半'}` : ''} {isLastBeat && '||'}
+          {measureNumber}小節{showBeatLabel ? ` - ${isFirstBeat ? '前半' : '後半'}` : ''}
         </span>
         <div className="flex gap-1">
           {value && (
-            <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={handlePreview}>
-              <Volume2 className="h-3 w-3" />
-            </Button>
-          )}
-          {value && (
-            <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={handleClear}>
-              <X className="h-3 w-3" />
-            </Button>
+            <>
+              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={handlePreview}>
+                <Volume2 className="h-3 w-3" />
+              </Button>
+              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={handleClear}>
+                <X className="h-3 w-3" />
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -204,7 +95,7 @@ export function ChordInput({ value, onChange, index, isPlaying = false, showBeat
             <SelectValue placeholder="種類" />
           </SelectTrigger>
           <SelectContent>
-            {QUALITIES.map((q) => (
+            {QUALITY_OPTIONS.map((q) => (
               <SelectItem key={q.value} value={q.value}>{q.label}</SelectItem>
             ))}
           </SelectContent>
