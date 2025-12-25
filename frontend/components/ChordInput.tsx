@@ -33,23 +33,23 @@ interface ChordInputProps {
 
 // 度数選択肢（全角ローマ数字 + 修飾子込み）
 const DEGREE_OPTIONS = [
-  { value: 'I', label: 'Ⅰ', halfWidth: 'I' },
-  { value: '#I', label: '#Ⅰ', halfWidth: '#I' },
-  { value: 'bII', label: '♭Ⅱ', halfWidth: 'bII' },
-  { value: 'II', label: 'Ⅱ', halfWidth: 'II' },
-  { value: '#II', label: '#Ⅱ', halfWidth: '#II' },
-  { value: 'bIII', label: '♭Ⅲ', halfWidth: 'bIII' },
-  { value: 'III', label: 'Ⅲ', halfWidth: 'III' },
-  { value: 'IV', label: 'Ⅳ', halfWidth: 'IV' },
-  { value: '#IV', label: '#Ⅳ', halfWidth: '#IV' },
-  { value: 'bV', label: '♭Ⅴ', halfWidth: 'bV' },
-  { value: 'V', label: 'Ⅴ', halfWidth: 'V' },
-  { value: '#V', label: '#Ⅴ', halfWidth: '#V' },
-  { value: 'bVI', label: '♭Ⅵ', halfWidth: 'bVI' },
-  { value: 'VI', label: 'Ⅵ', halfWidth: 'VI' },
-  { value: '#VI', label: '#Ⅵ', halfWidth: '#VI' },
-  { value: 'bVII', label: '♭Ⅶ', halfWidth: 'bVII' },
-  { value: 'VII', label: 'Ⅶ', halfWidth: 'VII' },
+  { value: 'I', label: 'Ⅰ' },
+  { value: '#I', label: '#Ⅰ' },
+  { value: 'bII', label: '♭Ⅱ' },
+  { value: 'II', label: 'Ⅱ' },
+  { value: '#II', label: '#Ⅱ' },
+  { value: 'bIII', label: '♭Ⅲ' },
+  { value: 'III', label: 'Ⅲ' },
+  { value: 'IV', label: 'Ⅳ' },
+  { value: '#IV', label: '#Ⅳ' },
+  { value: 'bV', label: '♭Ⅴ' },
+  { value: 'V', label: 'Ⅴ' },
+  { value: '#V', label: '#Ⅴ' },
+  { value: 'bVI', label: '♭Ⅵ' },
+  { value: 'VI', label: 'Ⅵ' },
+  { value: '#VI', label: '#Ⅵ' },
+  { value: 'bVII', label: '♭Ⅶ' },
+  { value: 'VII', label: 'Ⅶ' },
 ]
 
 // クオリティ選択肢（英語表記）
@@ -95,7 +95,10 @@ function parseChordValue(chord: string | null): { degree: string; quality: strin
   
   if (!match) return { degree: '', quality: '', bass: '' }
   
-  const degreeWithModifier = (match[1] + match[2]).toUpperCase()
+  // 修飾子は小文字のまま、度数のみ大文字に
+  const modifier = match[1].toLowerCase()
+  const degreeRoman = match[2].toUpperCase()
+  const degreeWithModifier = modifier + degreeRoman
   const actualQuality = match[3] || ''
   
   // 内部形式からUI形式に変換（maj7→M7など）
@@ -190,7 +193,7 @@ export function ChordInput({ value, onChange, index, isPlaying = false, showBeat
           <SelectContent>
             <SelectItem value="none">空白</SelectItem>
             {DEGREE_OPTIONS.map((d) => (
-              <SelectItem key={d.value} value={d.halfWidth}>{d.label}</SelectItem>
+              <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -219,7 +222,7 @@ export function ChordInput({ value, onChange, index, isPlaying = false, showBeat
             <SelectContent>
               <SelectItem value="none">空白</SelectItem>
               {DEGREE_OPTIONS.map((d) => (
-                <SelectItem key={d.value} value={d.halfWidth}>{d.label}</SelectItem>
+                <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
