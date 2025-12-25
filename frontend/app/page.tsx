@@ -84,7 +84,7 @@ export default function HomePage() {
             Share Your <span className="text-accent">Chord Progressions</span>
           </h1>
           <p className="mx-auto max-w-[700px] text-lg text-muted-foreground md:text-xl">
-            度数（ディグリーネーム）でコード進行を共有・検索。
+            コード進行を共有・検索。
           </p>
         </div>
       </section>
@@ -135,7 +135,7 @@ export default function HomePage() {
           {/* 結果一覧 */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold tracking-tight">Latest Progressions</h2>
+              <h2 className="text-2xl font-bold tracking-tight">コード進行一覧</h2>
               <span className="text-sm text-muted-foreground">{progressions.length} 件の進行が見つかりました</span>
             </div>
             

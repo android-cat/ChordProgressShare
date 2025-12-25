@@ -6,7 +6,7 @@
   :root {
     /* Main Color: #e5e5e5 (Light Gray) -> Used for Secondary/Muted/Border */
     /* Sub Color: #333333 (Dark Gray) -> Used for Primary */
-    /* Sub Color 2: #fefa32 (Yellow) -> Used for Accent */
+    /* Sub Color 2: #f97316 (Orange) -> Used for Accent */
     /* Back Color: #FFFFFF (White) -> Used for Background */
     /* Text Color: #242422 (Dark Gray) -> Used for Foreground */
 
@@ -28,8 +28,8 @@
     --muted: 0 0% 90%;
     --muted-foreground: 0 0% 40%;
 
-    --accent: 61 99% 60%;
-    --accent-foreground: 60 3% 14%;
+    --accent: 24 85% 55%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;

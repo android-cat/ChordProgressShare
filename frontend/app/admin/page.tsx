@@ -32,9 +32,11 @@ import {
   fetchBlockedIPs,
   blockIP,
   unblockIP,
+  fetchFeedbacks,
   type Progression,
   type DiffResponse,
-  type BlockedIP
+  type BlockedIP,
+  type Feedback
 } from '@/lib/api'
 
 export default function AdminPage() {
@@ -42,6 +44,7 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [pendingList, setPendingList] = useState<Progression[]>([])
   const [blockedIPs, setBlockedIPs] = useState<BlockedIP[]>([])
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [selectedDiff, setSelectedDiff] = useState<DiffResponse | null>(null)
   const [showDiffDialog, setShowDiffDialog] = useState(false)
@@ -70,12 +73,14 @@ export default function AdminPage() {
   const loadData = async () => {
     try {
       setIsLoading(true)
-      const [pending, blocked] = await Promise.all([
+      const [pending, blocked, feedbackList] = await Promise.all([
         fetchPendingProgressions(adminPassword),
-        fetchBlockedIPs(adminPassword)
+        fetchBlockedIPs(adminPassword),
+        fetchFeedbacks(adminPassword)
       ])
       setPendingList(pending)
       setBlockedIPs(blocked)
+      setFeedbacks(feedbackList)
     } catch (error) {
       toast({
         title: 'エラー',
@@ -204,12 +209,15 @@ export default function AdminPage() {
       </div>
 
       <Tabs defaultValue="pending">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="pending">
             承認待ち ({pendingList.length})
           </TabsTrigger>
           <TabsTrigger value="blocked">
             ブロックIP ({blockedIPs.length})
+          </TabsTrigger>
+          <TabsTrigger value="feedbacks">
+            ご意見 ({feedbacks.length})
           </TabsTrigger>
         </TabsList>
 
@@ -233,6 +241,9 @@ export default function AdminPage() {
                         {item.original_id ? '編集リクエスト' : '新規投稿'}
                         {' - '}
                         {new Date(item.created_at).toLocaleString('ja-JP')}
+                        {item.ip_address && (
+                          <span className="ml-2 font-mono text-xs">IP: {item.ip_address}</span>
+                        )}
                       </CardDescription>
                     </div>
                     <div className="flex gap-2">
@@ -338,6 +349,30 @@ export default function AdminPage() {
                     >
                       <Trash2 className="h-4 w-4 mr-1" /> 解除
                     </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="feedbacks" className="space-y-4">
+          {feedbacks.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              ご意見・ご感想はありません
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {feedbacks.map((item) => (
+                <Card key={item.id}>
+                  <CardContent className="pt-6">
+                    <p className="whitespace-pre-wrap mb-4">{item.content}</p>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>{new Date(item.created_at).toLocaleString('ja-JP')}</span>
+                      {item.ip_address && (
+                        <span className="font-mono text-xs">IP: {item.ip_address}</span>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}

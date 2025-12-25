@@ -72,6 +72,7 @@ class ProgressionResponse(ProgressionBase):
     patterns: List[PatternResponse]
     songs: List[SongResponse]
     original_id: Optional[UUID] = None
+    ip_address: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -97,6 +98,36 @@ class AdminAction(BaseModel):
 class BlockIPRequest(BaseModel):
     ip_address: str
     reason: Optional[str] = None
+
+
+class BlockedIPResponse(BaseModel):
+    id: UUID
+    ip_address: str
+    reason: Optional[str]
+    blocked_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class DiffResponse(BaseModel):
+    original: Optional[ProgressionResponse]
+    updated: ProgressionResponse
+
+
+# Feedback schemas
+class FeedbackCreate(BaseModel):
+    content: str
+
+
+class FeedbackResponse(BaseModel):
+    id: UUID
+    content: str
+    created_at: datetime
+    ip_address: Optional[str]
+
+    class Config:
+        from_attributes = True
 
 
 class BlockedIPResponse(BaseModel):

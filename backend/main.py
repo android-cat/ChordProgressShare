@@ -19,17 +19,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, and_
 from sqlalchemy.orm import selectinload
 
-from database import get_db
-from models import Progression, Pattern, Song, BlockedIP
+from database import get_db, engine, Base
+from models import Progression, Pattern, Song, BlockedIP, Feedback
 from schemas import (
     ProgressionCreate, ProgressionUpdate, ProgressionResponse, 
     ProgressionListResponse, AdminAction, BlockIPRequest, 
-    BlockedIPResponse, DiffResponse
+    BlockedIPResponse, DiffResponse, FeedbackCreate, FeedbackResponse
 )
 from chord_utils import normalize_chords_for_search, normalize_chord, normalize_search_query, get_chord_options
 
 # FastAPIアプリケーション初期化
 app = FastAPI(title="Chord Progress Share API", version="1.0.0")
+
+@app.on_event("startup")
+async def startup():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 # CORS設定(開発環境用、本番環境では適切なオリジンを設定すること)
 app.add_middleware(
@@ -279,6 +284,24 @@ async def get_chord_options_endpoint():
     return get_chord_options()
 
 
+@app.post("/api/feedback", response_model=FeedbackResponse)
+async def create_feedback(
+    data: FeedbackCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    ip: str = Depends(check_ip_blocked)
+):
+    """ご意見・ご感想を投稿"""
+    feedback = Feedback(
+        content=data.content,
+        ip_address=ip
+    )
+    db.add(feedback)
+    await db.commit()
+    await db.refresh(feedback)
+    return feedback
+
+
 # ====================
 # Admin Endpoints(管理者専用API)
 # ====================
@@ -435,6 +458,17 @@ async def unblock_ip(
     await db.commit()
     
     return {"message": "ブロックを解除しました"}
+
+
+@app.get("/api/admin/feedbacks", response_model=List[FeedbackResponse])
+async def get_feedbacks(
+    db: AsyncSession = Depends(get_db),
+    _: bool = Depends(verify_admin)
+):
+    """ご意見・ご感想一覧を取得"""
+    stmt = select(Feedback).order_by(Feedback.created_at.desc())
+    result = await db.execute(stmt)
+    return result.scalars().all()
 
 
 @app.get("/health")

@@ -148,11 +148,11 @@ export function ProgressionCard({ progression, showDetail = false, onEdit }: Pro
                 >
                   {playingPattern === pIndex ? (
                     <>
-                      <Square className="h-3 w-3 mr-2 fill-current" /> Stop
+                      <Square className="h-3 w-3 mr-2 fill-current" /> 停止
                     </>
                   ) : (
                     <>
-                      <Play className="h-3 w-3 mr-2 fill-current" /> Play
+                      <Play className="h-3 w-3 mr-2 fill-current" /> 再生
                     </>
                   )}
                 </Button>

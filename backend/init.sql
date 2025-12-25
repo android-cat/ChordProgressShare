@@ -39,6 +39,14 @@ CREATE TABLE blocked_ips (
     blocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ご意見・ご感想テーブル
+CREATE TABLE feedbacks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ip_address VARCHAR(45)
+);
+
 -- インデックス
 CREATE INDEX idx_progressions_status ON progressions(status);
 CREATE INDEX idx_progressions_normalized_chords ON progressions(normalized_chords);

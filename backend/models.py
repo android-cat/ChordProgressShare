@@ -88,3 +88,16 @@ class BlockedIP(Base):
     ip_address = Column(String(45), nullable=False, unique=True)
     reason = Column(Text)
     blocked_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Feedback(Base):
+    """意見・感想テーブル
+    
+    ユーザーからのフィードバックを保存。
+    """
+    __tablename__ = "feedbacks"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    ip_address = Column(String(45))

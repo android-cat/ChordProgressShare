@@ -1,4 +1,4 @@
-/**
+﻿/**
  * コード進行投稿フォームコンポーネント
  * 
  * 新規投稿・編集リクエストの両方で使用。
@@ -19,9 +19,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
 import { ChordInput } from './ChordInput'
 import { MeasureInput } from './MeasureInput'
-import { Plus, Trash2, Play, Square, Music } from 'lucide-react'
+import { Plus, Trash2, Play, Square, Music, Volume2, Activity } from 'lucide-react'
 import { playChords, stopPlayback } from '@/lib/audio'
 import type { Pattern, Song, ProgressionCreate } from '@/lib/api'
+import { cn } from '@/lib/utils'
 
 interface PatternInput {
   label: string
@@ -209,7 +210,7 @@ export function ProgressionForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* 基本情報 */}
-      <Card>
+      <Card className="border-border/50 bg-card/50 backdrop-blur">
         <CardHeader>
           <CardTitle>基本情報</CardTitle>
         </CardHeader>
@@ -222,6 +223,7 @@ export function ProgressionForm({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="例: 王道進行"
               required
+              className="bg-background/50"
             />
           </div>
           <div>
@@ -232,6 +234,7 @@ export function ProgressionForm({
               onChange={(e) => setRemarks(e.target.value)}
               placeholder="コード進行についての説明や補足情報"
               rows={3}
+              className="bg-background/50"
             />
           </div>
         </CardContent>
@@ -239,7 +242,7 @@ export function ProgressionForm({
 
       {/* パターン入力 */}
       {patterns.map((pattern, patternIndex) => (
-        <Card key={patternIndex}>
+        <Card key={patternIndex} className="border-border/50 bg-card/50 backdrop-blur">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 flex-1">
@@ -247,7 +250,7 @@ export function ProgressionForm({
                   value={pattern.label}
                   onChange={(e) => updatePattern(patternIndex, 'label', e.target.value)}
                   placeholder="パターン名"
-                  className="max-w-xs"
+                  className="max-w-xs bg-background/50"
                 />
                 <Button
                   type="button"
@@ -273,30 +276,43 @@ export function ProgressionForm({
                 </Button>
               )}
             </div>
-            <div className="flex items-center gap-4 mt-4">
-              <div className="flex items-center gap-2 flex-1">
-                <Label htmlFor={`bpm-${patternIndex}`} className="text-sm whitespace-nowrap">BPM: {bpm}</Label>
-                <input
-                  id={`bpm-${patternIndex}`}
-                  type="range"
-                  min="60"
-                  max="200"
-                  value={bpm}
-                  onChange={(e) => setBpm(Number(e.target.value))}
-                  className="flex-1"
-                />
+            
+            <div className="grid gap-4 p-4 rounded-lg bg-secondary/30 border border-border/50 mt-4">
+              <div className="flex items-center gap-4">
+                <Activity className="h-4 w-4 text-muted-foreground" />
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2 text-xs">
+                    <Label htmlFor={`bpm-${patternIndex}`}>BPM</Label>
+                    <span className="text-muted-foreground">{bpm}</span>
+                  </div>
+                  <input
+                    id={`bpm-${patternIndex}`}
+                    type="range"
+                    min="60"
+                    max="200"
+                    value={bpm}
+                    onChange={(e) => setBpm(Number(e.target.value))}
+                    className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                  />
+                </div>
               </div>
-              <div className="flex items-center gap-2 flex-1">
-                <Label htmlFor={`volume-${patternIndex}`} className="text-sm whitespace-nowrap">音量: {volume}dB</Label>
-                <input
-                  id={`volume-${patternIndex}`}
-                  type="range"
-                  min="-24"
-                  max="0"
-                  value={volume}
-                  onChange={(e) => setVolume(Number(e.target.value))}
-                  className="flex-1"
-                />
+              <div className="flex items-center gap-4">
+                <Volume2 className="h-4 w-4 text-muted-foreground" />
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2 text-xs">
+                    <Label htmlFor={`volume-${patternIndex}`}>Volume</Label>
+                    <span className="text-muted-foreground">{volume}dB</span>
+                  </div>
+                  <input
+                    id={`volume-${patternIndex}`}
+                    type="range"
+                    min="-24"
+                    max="0"
+                    value={volume}
+                    onChange={(e) => setVolume(Number(e.target.value))}
+                    className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                  />
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -331,12 +347,12 @@ export function ProgressionForm({
         </Card>
       ))}
 
-      <Button type="button" variant="outline" onClick={addPattern} className="w-full">
+      <Button type="button" variant="outline" onClick={addPattern} className="w-full border-dashed border-2 py-6">
         <Plus className="h-4 w-4 mr-2" /> パターンを追加
       </Button>
 
       {/* 使用楽曲 */}
-      <Card>
+      <Card className="border-border/50 bg-card/50 backdrop-blur">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Music className="h-5 w-5" /> 使用楽曲
@@ -344,7 +360,7 @@ export function ProgressionForm({
         </CardHeader>
         <CardContent className="space-y-4">
           {songs.map((song, songIndex) => (
-            <div key={songIndex} className="border rounded-lg p-4 space-y-3">
+            <div key={songIndex} className="border border-border/50 rounded-lg p-4 space-y-3 bg-background/30">
               <div className="flex items-center justify-between">
                 <span className="font-medium">楽曲 {songIndex + 1}</span>
                 <Button
@@ -363,6 +379,7 @@ export function ProgressionForm({
                     value={song.name}
                     onChange={(e) => updateSong(songIndex, 'name', e.target.value)}
                     placeholder="曲名"
+                    className="bg-background/50"
                   />
                 </div>
                 <div>
@@ -371,6 +388,7 @@ export function ProgressionForm({
                     value={song.artist}
                     onChange={(e) => updateSong(songIndex, 'artist', e.target.value)}
                     placeholder="アーティスト名"
+                    className="bg-background/50"
                   />
                 </div>
                 <div>
@@ -379,6 +397,7 @@ export function ProgressionForm({
                     value={song.youtube_url}
                     onChange={(e) => updateSong(songIndex, 'youtube_url', e.target.value)}
                     placeholder="https://youtube.com/watch?v=..."
+                    className="bg-background/50"
                   />
                 </div>
                 <div>
@@ -387,6 +406,7 @@ export function ProgressionForm({
                     value={song.spotify_url}
                     onChange={(e) => updateSong(songIndex, 'spotify_url', e.target.value)}
                     placeholder="https://open.spotify.com/track/..."
+                    className="bg-background/50"
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -395,6 +415,7 @@ export function ProgressionForm({
                     value={song.apple_music_url}
                     onChange={(e) => updateSong(songIndex, 'apple_music_url', e.target.value)}
                     placeholder="https://music.apple.com/..."
+                    className="bg-background/50"
                   />
                 </div>
               </div>
@@ -429,7 +450,7 @@ export function ProgressionForm({
               )}
             </div>
           ))}
-          <Button type="button" variant="outline" onClick={addSong} className="w-full">
+          <Button type="button" variant="outline" onClick={addSong} className="w-full border-dashed border-2 py-6">
             <Plus className="h-4 w-4 mr-2" /> 楽曲を追加
           </Button>
         </CardContent>
@@ -445,3 +466,4 @@ export function ProgressionForm({
     </form>
   )
 }
+
