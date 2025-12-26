@@ -165,7 +165,7 @@ export default function HomePage() {
               <CardTitle>新規コード進行の投稿</CardTitle>
             </CardHeader>
             <CardContent>
-              <ProgressionForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+              <ProgressionForm onSubmit={handleSubmit} isLoading={isSubmitting} />
             </CardContent>
           </Card>
         </TabsContent>
