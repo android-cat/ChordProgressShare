@@ -160,19 +160,32 @@ export function ProgressionCard({ progression, showDetail = false, onEdit }: Pro
               
               <div className="p-4 rounded-lg bg-background/80 border border-border/50 font-mono text-sm overflow-x-auto">
                 <div className="flex flex-wrap gap-y-2">
-                  {formatChordsToMeasures(pattern.chords).map((measure, mIndex) => (
-                    <span key={mIndex} className="flex items-center">
-                      <span className="text-muted-foreground/50 mx-1">|</span>
-                      <span className="mx-1 font-medium">
-                        {measure.firstBeat || <span className="text-muted-foreground/30">/</span>}
-                      </span>
-                      {measure.hasSecondBeat && (
-                        <span className="mx-1 font-medium">
-                          {measure.secondBeat}
+                  {formatChordsToMeasures(pattern.chords).map((measure, mIndex) => {
+                    const firstBeatIndex = mIndex * 2
+                    const secondBeatIndex = mIndex * 2 + 1
+                    const isFirstBeatPlaying = playingPattern === pIndex && playingIndex === firstBeatIndex
+                    const isSecondBeatPlaying = playingPattern === pIndex && playingIndex === secondBeatIndex
+                    
+                    return (
+                      <span key={mIndex} className="flex items-center">
+                        <span className="text-muted-foreground/50 mx-1">|</span>
+                        <span className={cn(
+                          "mx-1 font-medium px-2 py-0.5 rounded transition-colors",
+                          isFirstBeatPlaying && "bg-accent  text-primary-foreground"
+                        )}>
+                          {measure.firstBeat || <span className="text-muted-foreground/30">/</span>}
                         </span>
-                      )}
-                    </span>
-                  ))}
+                        {measure.hasSecondBeat && (
+                          <span className={cn(
+                            "mx-1 font-medium px-2 py-0.5 rounded transition-colors",
+                            isSecondBeatPlaying && "bg-accent  text-primary-foreground"
+                          )}>
+                            {measure.secondBeat}
+                          </span>
+                        )}
+                      </span>
+                    )
+                  })}
                   <span className="text-muted-foreground/50 mx-1">|</span>
                 </div>
               </div>

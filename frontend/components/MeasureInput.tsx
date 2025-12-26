@@ -41,8 +41,8 @@ export function MeasureInput({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        <div className="flex-1">
+      <div className="flex items-stretch gap-2">
+        <div className="flex-1 min-w-0">
           <ChordInput
             index={measureIndex * 2}
             value={firstBeatValue}
@@ -53,7 +53,7 @@ export function MeasureInput({
         </div>
         
         {showSecondBeat && (
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <ChordInput
               index={measureIndex * 2 + 1}
               value={secondBeatValue as string | null}
@@ -69,7 +69,7 @@ export function MeasureInput({
           variant="outline"
           size="icon"
           onClick={handleToggle}
-          className="h-10 w-10 shrink-0"
+          className="h-auto w-10 shrink-0 self-stretch"
           title={showSecondBeat ? '後半を削除' : '後半を追加'}
         >
           {showSecondBeat ? (

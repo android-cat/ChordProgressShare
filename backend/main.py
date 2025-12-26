@@ -36,10 +36,12 @@ async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-# CORS設定(開発環境用、本番環境では適切なオリジンを設定すること)
+# CORS設定
+# 環境変数CORS_ORIGINSで許可するオリジンを設定（カンマ区切り）
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

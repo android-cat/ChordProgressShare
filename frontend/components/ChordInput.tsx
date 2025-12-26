@@ -56,7 +56,7 @@ export function ChordInput({ value, onChange, index, isPlaying = false, showBeat
   const isFirstBeat = index % 2 === 0
 
   return (
-    <div className={`relative p-2 border rounded-lg space-y-2 ${isPlaying ? 'bg-primary/10 border-primary' : 'bg-card'}`}>
+    <div className={`relative p-3 border rounded-lg space-y-3 ${isPlaying ? 'bg-primary/10 border-primary' : 'bg-card'}`}>
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
           {measureNumber}小節{showBeatLabel ? ` - ${isFirstBeat ? '前半' : '後半'}` : ''}
@@ -64,24 +64,24 @@ export function ChordInput({ value, onChange, index, isPlaying = false, showBeat
         <div className="flex gap-1">
           {value && (
             <>
-              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={handlePreview}>
-                <Volume2 className="h-3 w-3" />
+              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={handlePreview}>
+                <Volume2 className="h-4 w-4" />
               </Button>
-              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={handleClear}>
-                <X className="h-3 w-3" />
+              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={handleClear}>
+                <X className="h-4 w-4" />
               </Button>
             </>
           )}
         </div>
       </div>
 
-      <div className="flex gap-1">
+      <div className="flex gap-2">
         {/* 度数（修飾子込み） */}
         <Select value={parsed.degree || 'none'} onValueChange={(v: string) => handleChange('degree', v === 'none' ? '' : v)}>
-          <SelectTrigger className="flex-1 h-8 text-xs">
+          <SelectTrigger className="flex-1 h-10 text-sm min-w-0">
             <SelectValue placeholder="度数" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" className="z-[100]">
             <SelectItem value="none">空白</SelectItem>
             {DEGREE_OPTIONS.map((d) => (
               <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
@@ -91,10 +91,10 @@ export function ChordInput({ value, onChange, index, isPlaying = false, showBeat
 
         {/* クオリティ */}
         <Select value={parsed.quality || 'major'} onValueChange={(v: string) => handleChange('quality', v === 'major' ? '' : v)}>
-          <SelectTrigger className="flex-1 h-8 text-xs">
+          <SelectTrigger className="flex-1 h-10 text-sm min-w-0">
             <SelectValue placeholder="種類" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" className="z-[100]">
             {QUALITY_OPTIONS.map((q) => (
               <SelectItem key={q.value} value={q.value}>{q.label}</SelectItem>
             ))}
@@ -104,26 +104,26 @@ export function ChordInput({ value, onChange, index, isPlaying = false, showBeat
 
       {/* オンコード */}
       {showBass ? (
-        <div className="flex items-center gap-1">
-          <span className="text-xs">/</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm">/</span>
           <Select value={parsed.bass || 'none'} onValueChange={(v: string) => handleChange('bass', v === 'none' ? '' : v)}>
-            <SelectTrigger className="flex-1 h-8 text-xs">
+            <SelectTrigger className="flex-1 h-10 text-sm min-w-0">
               <SelectValue placeholder="ベース音" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper" className="z-[100]">
               <SelectItem value="none">空白</SelectItem>
               {DEGREE_OPTIONS.map((d) => (
                 <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setShowBass(false); handleChange('bass', '') }}>
-            <X className="h-3 w-3" />
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setShowBass(false); handleChange('bass', '') }}>
+            <X className="h-4 w-4" />
           </Button>
         </div>
       ) : (
-        <Button type="button" variant="ghost" size="sm" className="w-full h-6 text-xs" onClick={() => setShowBass(true)}>
-          <Plus className="h-3 w-3 mr-1" /> オンコード
+        <Button type="button" variant="ghost" size="sm" className="w-full h-8 text-sm" onClick={() => setShowBass(true)}>
+          <Plus className="h-4 w-4 mr-1" /> オンコード
         </Button>
       )}
 
