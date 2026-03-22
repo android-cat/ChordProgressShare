@@ -85,7 +85,7 @@ export function ProgressionCard({ progression, showDetail = false, onEdit }: Pro
           )}
         </div>
         {progression.remarks && (
-          <CardDescription className="mt-2 line-clamp-2">
+          <CardDescription className={cn("mt-2", !showDetail && "line-clamp-2")}>
             {progression.remarks}
           </CardDescription>
         )}
