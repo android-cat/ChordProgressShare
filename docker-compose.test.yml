@@ -1,0 +1,79 @@
+# テスト実行用 docker-compose
+#
+# 【使い方】
+#   # バックエンドのテストだけ実行
+#   docker compose -f docker-compose.test.yml run --rm backend-test
+#
+#   # フロントエンドのテストだけ実行
+#   docker compose -f docker-compose.test.yml run --rm frontend-test
+#
+#   # 両方まとめて実行
+#   docker compose -f docker-compose.test.yml up --abort-on-container-exit
+#
+#   # テストコンテナを削除して後片付け
+#   docker compose -f docker-compose.test.yml down -v
+
+services:
+
+  # ─────────────────────────────────────────
+  # テスト専用 PostgreSQL
+  # ─────────────────────────────────────────
+  test-db:
+    image: postgres:15-alpine
+    container_name: chord_test_db
+    environment:
+      POSTGRES_USER: chord_user
+      POSTGRES_PASSWORD: chord_password
+      POSTGRES_DB: chord_test_db
+    # データはコンテナ削除時に消えるよう named volume を使わない
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chord_user -d chord_test_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ─────────────────────────────────────────
+  # バックエンド (pytest)
+  # ─────────────────────────────────────────
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chord_backend_test
+    environment:
+      DATABASE_URL: postgresql://chord_user:chord_password@test-db:5432/chord_test_db
+      TEST_DATABASE_URL: postgresql+asyncpg://chord_user:chord_password@test-db:5432/chord_test_db
+      ADMIN_PASSWORD: admin123
+      CORS_ORIGINS: http://localhost
+    depends_on:
+      test-db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    # requirements-test.txt をインストールしてから pytest を実行
+    command: >
+      sh -c "pip install -q -r requirements-test.txt &&
+             python -m pytest tests/ -v --tb=short"
+    # テスト完了後にコンテナが止まるよう restart しない
+    restart: "no"
+
+  # ─────────────────────────────────────────
+  # フロントエンド (Jest)
+  # ─────────────────────────────────────────
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: chord_frontend_test
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    # Jest に必要なパッケージをインストールしてからテスト実行
+    command: >
+      sh -c "npm install --silent &&
+             npm test -- --watchAll=false --passWithNoTests"
+    restart: "no"
+
+volumes: {}

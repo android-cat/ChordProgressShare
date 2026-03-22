@@ -78,6 +78,9 @@ def normalize_search_query(query: Optional[str]) -> str:
     # スペースやハイフンも|として扱う
     normalized = re.sub(r'[-\s]+', '|', normalized)
     
+    # スペースがパイプに変換された後、前後の|を再度削除
+    normalized = normalized.strip('|')
+    
     return normalized
 
 
